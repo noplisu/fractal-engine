@@ -1,6 +1,6 @@
 # Fractal Agent
 
-A minimal CLI coding assistant powered by an LLM with tool calling. It reads files, writes files, and runs shell commands in an agent loop until the model produces a final answer.
+A minimal CLI coding assistant powered by an LLM with tool calling. It searches the codebase, reads and writes files, runs shell commands, and loops until the model produces a final answer.
 
 ## Requirements
 
@@ -32,11 +32,14 @@ The entry point is `app/main.py`.
 
 ## Tools
 
-| Tool   | Description                    |
-|--------|--------------------------------|
-| Read   | Read a file by path            |
-| Write  | Write content to a file        |
-| Bash   | Run a shell command            |
+| Tool    | Description                                      |
+|---------|--------------------------------------------------|
+| Grep    | Search file contents (regex, optional glob)      |
+| Glob    | Find files by glob pattern                       |
+| ListDir | List entries in a directory                      |
+| Read    | Read a file by path                              |
+| Write   | Write content to a file                          |
+| Bash    | Run a shell command                              |
 
 ## Project layout
 
