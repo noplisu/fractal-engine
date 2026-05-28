@@ -14,6 +14,8 @@ Rules:
 - After completing a task, give a brief summary of what you did.
 - If a tool returns an error, read the message and adjust your approach.
 - Do not run destructive commands (e.g. rm -rf, git push --force) unless the user explicitly asks.
+- Tool arguments must be valid JSON. In Write/StrReplace, escape quotes and newlines inside strings.
+- For large HTML or files, prefer Write with properly escaped JSON; if that fails, write in smaller steps.
 
 You have at most {max_iterations} model turns per user message. Plan tool use efficiently."""
 

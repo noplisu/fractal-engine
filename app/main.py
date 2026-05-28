@@ -6,7 +6,7 @@ from pathlib import Path
 from openai import OpenAI
 
 from app.agent import run_agent_loop, run_interactive
-from app.config import API_KEY, BASE_URL, DEFAULT_MAX_ITERATIONS
+from app.config import API_KEY, BASE_URL, DEFAULT_MAX_ITERATIONS, DEFAULT_MAX_TOKENS, MAX_TOKENS
 from app.prompts import initial_messages
 
 
@@ -38,6 +38,13 @@ def main() -> None:
         action="store_true",
         help="Log model turns and tool calls to stderr",
     )
+    p.add_argument(
+        "--max-tokens",
+        type=int,
+        default=MAX_TOKENS,
+        metavar="N",
+        help=f"Max tokens per model response (default: {DEFAULT_MAX_TOKENS}, env: FRACTAL_MAX_TOKENS)",
+    )
     args = p.parse_args()
 
     if not args.prompt and not args.interactive:
@@ -45,6 +52,9 @@ def main() -> None:
 
     if args.max_iterations < 1:
         p.error("--max-iterations must be at least 1")
+
+    if args.max_tokens < 1:
+        p.error("--max-tokens must be at least 1")
 
     if not API_KEY:
         raise RuntimeError("OPENROUTER_API_KEY is not set")
@@ -60,12 +70,16 @@ def main() -> None:
 
     if args.prompt:
         messages.append({"role": "user", "content": args.prompt})
-        content, limited = run_agent_loop(
-            client, messages, max_iterations=args.max_iterations, verbose=args.verbose
+        content, status = run_agent_loop(
+            client,
+            messages,
+            max_iterations=args.max_iterations,
+            max_tokens=args.max_tokens,
+            verbose=args.verbose,
         )
         if content:
             print(content)
-        if limited:
+        if status in ("limit", "api"):
             sys.exit(1)
         if not args.interactive:
             return
@@ -75,6 +89,7 @@ def main() -> None:
             client,
             messages,
             max_iterations=args.max_iterations,
+            max_tokens=args.max_tokens,
             verbose=args.verbose,
         )
 

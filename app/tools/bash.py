@@ -1,11 +1,9 @@
-import json
 import subprocess
 
 from app.tools.base import Tool
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     result = subprocess.run(
         params["command"],
         shell=True,

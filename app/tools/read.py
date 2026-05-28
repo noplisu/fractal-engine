@@ -1,10 +1,7 @@
-import json
-
 from app.tools.base import Tool
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     with open(params["file_path"]) as f:
         return f.read()
 

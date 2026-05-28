@@ -49,8 +49,12 @@ Options:
 | `-i`, `--interactive` | Start interactive mode after any `-p` prompt |
 | `--cwd PATH` | Working directory for tools and system context |
 | `--max-iterations N` | Max model turns per user message (default: 25) |
+| `--max-tokens N` | Max tokens per model response (default: 2048) |
 | `-v`, `--verbose` | Log turns and tool calls to stderr |
-| `FRACTAL_MODEL` | Override the OpenRouter model id |
+| `FRACTAL_MODEL` | OpenRouter model id (default: `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`) |
+| `FRACTAL_MAX_TOKENS` | Default for `--max-tokens` |
+
+If OpenRouter returns **402 (insufficient credits)**, lower `--max-tokens` (e.g. `2048`) or add credits to your key.
 
 The entry point is `app/main.py`.
 

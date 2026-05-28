@@ -1,5 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -9,7 +10,7 @@ class Tool:
     name: str
     description: str
     parameters: dict
-    execute: Callable[[str], str]
+    execute: Callable[[dict[str, Any]], str]
 
     def to_openai_spec(self) -> dict:
         return {

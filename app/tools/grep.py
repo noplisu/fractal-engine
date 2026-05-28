@@ -1,4 +1,3 @@
-import json
 import re
 
 from app.tools.base import Tool
@@ -11,8 +10,7 @@ from app.tools.utils import (
 )
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     pattern_str = params["pattern"]
     root = resolve_path(params.get("path", "."))
     file_glob = params.get("glob")

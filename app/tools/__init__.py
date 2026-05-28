@@ -15,6 +15,7 @@ from app.tools import (
     write,
 )
 from app.tools.base import Tool
+from app.tools.utils import parse_arguments
 
 ALL_TOOLS: tuple[Tool, ...] = (
     read.tool,
@@ -33,11 +34,19 @@ def openai_tool_specs() -> list[dict]:
     return [t.to_openai_spec() for t in ALL_TOOLS]
 
 
-def execute_tool(name: str, arguments: str) -> str:
+def execute_tool(name: str, arguments: str | dict) -> str:
     tool = _BY_NAME.get(name)
     if tool is None:
         raise RuntimeError(f"Unknown tool: {name}")
-    return tool.execute(arguments)
+
+    params, err = parse_arguments(arguments)
+    if err:
+        return err
+
+    try:
+        return tool.execute(params)
+    except Exception as e:
+        return f"Error: {name} failed: {type(e).__name__}: {e}"
 
 
 def execute_tool_call(tool_call) -> str:

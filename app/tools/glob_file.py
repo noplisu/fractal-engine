@@ -1,11 +1,8 @@
-import json
-
 from app.tools.base import Tool
 from app.tools.utils import glob_pattern, resolve_path, truncate
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     pattern = glob_pattern(params["glob_pattern"])
     root = resolve_path(params.get("target_directory", "."))
 

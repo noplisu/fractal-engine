@@ -1,11 +1,9 @@
-import json
 import os
 
 from app.tools.base import Tool
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     file_path = params["file_path"]
     parent = os.path.dirname(file_path)
     if parent:

@@ -1,12 +1,9 @@
-import json
-
 from app.config import SKIP_DIR_NAMES
 from app.tools.base import Tool
 from app.tools.utils import resolve_path, truncate
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     root = resolve_path(params.get("target_directory", "."))
 
     if not root.is_dir():

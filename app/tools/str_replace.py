@@ -1,12 +1,10 @@
-import json
 from pathlib import Path
 
 from app.tools.base import Tool
 from app.tools.utils import display_path, resolve_path
 
 
-def _execute(arguments: str) -> str:
-    params = json.loads(arguments)
+def _execute(params: dict) -> str:
     path = resolve_path(params["path"])
     old_string = params["old_string"]
     new_string = params["new_string"]
