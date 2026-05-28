@@ -37,9 +37,10 @@ The entry point is `app/main.py`.
 | Grep    | Search file contents (regex, optional glob)      |
 | Glob    | Find files by glob pattern                       |
 | ListDir | List entries in a directory                      |
-| Read    | Read a file by path                              |
-| Write   | Write content to a file                          |
-| Bash    | Run a shell command                              |
+| Read       | Read a file by path                              |
+| Write      | Write content to a file                          |
+| StrReplace | Replace an exact string in a file                |
+| Bash       | Run a shell command                              |
 
 ## Project layout
 
