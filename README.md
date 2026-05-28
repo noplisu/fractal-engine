@@ -24,9 +24,33 @@ uv sync
 
 ## Usage
 
+Single prompt:
+
 ```sh
 ./run.sh -p "list Python files in this directory"
 ```
+
+Interactive mode (multi-turn REPL):
+
+```sh
+./run.sh -i
+```
+
+Run one prompt, then continue interactively:
+
+```sh
+./run.sh -p "summarize app/main.py" -i
+```
+
+Options:
+
+| Flag | Description |
+|------|-------------|
+| `-i`, `--interactive` | Start interactive mode after any `-p` prompt |
+| `--cwd PATH` | Working directory for tools and system context |
+| `--max-iterations N` | Max model turns per user message (default: 25) |
+| `-v`, `--verbose` | Log turns and tool calls to stderr |
+| `FRACTAL_MODEL` | Override the OpenRouter model id |
 
 The entry point is `app/main.py`.
 

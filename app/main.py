@@ -4,15 +4,18 @@ import json
 import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
 from openai import OpenAI
 
 MAX_TOOL_OUTPUT = 50_000
+DEFAULT_MAX_ITERATIONS = 25
 SKIP_DIR_NAMES = {".git", ".venv", "node_modules", "__pycache__", ".ruff_cache"}
 
 API_KEY = os.getenv("OPENROUTER_API_KEY")
 BASE_URL = os.getenv("OPENROUTER_BASE_URL", default="https://openrouter.ai/api/v1")
+MODEL = os.getenv("FRACTAL_MODEL", "anthropic/claude-haiku-4.5")
 
 TOOLS = [
     {
@@ -424,20 +427,44 @@ def execute_tool(tool_call) -> str:
     return handler(args)
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("-p", required=True)
-    args = p.parse_args()
+def build_system_prompt(cwd: Path, max_iterations: int) -> str:
+    return f"""You are Fractal Agent, a coding assistant that helps users explore and modify their codebase.
 
-    if not API_KEY:
-        raise RuntimeError("OPENROUTER_API_KEY is not set")
+Working directory: {cwd}
 
-    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
-    messages = [{"role": "user", "content": args.p}]
+Rules:
+- Use tools to inspect the codebase before making changes when you are unsure.
+- Prefer StrReplace for small edits; use Write for new files or large rewrites.
+- Prefer Grep, Glob, and ListDir over Bash for search and directory listing.
+- Keep changes minimal and focused on the user's request.
+- After completing a task, give a brief summary of what you did.
+- If a tool returns an error, read the message and adjust your approach.
+- Do not run destructive commands (e.g. rm -rf, git push --force) unless the user explicitly asks.
 
-    while True:
+You have at most {max_iterations} model turns per user message. Plan tool use efficiently."""
+
+
+def initial_messages(cwd: Path, max_iterations: int) -> list[dict]:
+    return [{"role": "system", "content": build_system_prompt(cwd, max_iterations)}]
+
+
+def run_agent_loop(
+    client: OpenAI,
+    messages: list[dict],
+    *,
+    max_iterations: int,
+    verbose: bool = False,
+) -> tuple[str | None, bool]:
+    """Run the agent until a final assistant message or iteration limit.
+
+    Returns (assistant_text, hit_iteration_limit).
+    """
+    for iteration in range(1, max_iterations + 1):
+        if verbose:
+            print(f"[turn {iteration}/{max_iterations}]", file=sys.stderr)
+
         chat = client.chat.completions.create(
-            model="anthropic/claude-haiku-4.5",
+            model=MODEL,
             messages=messages,
             tools=TOOLS,
             max_tokens=4096,
@@ -446,16 +473,15 @@ def main():
         if not chat.choices:
             raise RuntimeError("no choices in response")
 
-        choice = chat.choices[0]
-        message = choice.message
+        message = chat.choices[0].message
         messages.append(assistant_message_to_dict(message))
 
         if not message.tool_calls:
-            if message.content is not None:
-                print(message.content)
-            break
+            return message.content, False
 
         for tool_call in message.tool_calls:
+            if verbose:
+                print(f"  → {tool_call.function.name}", file=sys.stderr)
             result = execute_tool(tool_call)
             messages.append(
                 {
@@ -464,6 +490,118 @@ def main():
                     "content": result,
                 }
             )
+
+    limit_msg = (
+        f"Stopped: reached the maximum of {max_iterations} model turns "
+        "for this message. Ask a follow-up or raise --max-iterations."
+    )
+    messages.append({"role": "assistant", "content": limit_msg})
+    return limit_msg, True
+
+
+def run_interactive(
+    client: OpenAI,
+    messages: list[dict],
+    *,
+    max_iterations: int,
+    verbose: bool,
+) -> None:
+    print(f"Fractal Agent (interactive) — {Path.cwd()}")
+    print("Commands: exit, quit, /clear. Ctrl-D to quit.\n")
+
+    while True:
+        try:
+            user_input = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print()
+            break
+
+        if not user_input:
+            continue
+        if user_input.lower() in ("exit", "quit", ":q"):
+            break
+        if user_input == "/clear":
+            messages[:] = initial_messages(Path.cwd(), max_iterations)
+            print("Conversation cleared.\n")
+            continue
+
+        messages.append({"role": "user", "content": user_input})
+        content, limited = run_agent_loop(
+            client, messages, max_iterations=max_iterations, verbose=verbose
+        )
+        if content:
+            print(f"\n{content}\n")
+        if limited:
+            print(file=sys.stderr)
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Fractal Agent — LLM coding assistant")
+    p.add_argument("-p", "--prompt", help="Run a single prompt and exit")
+    p.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Interactive mode (REPL); use with -p to run an initial prompt first",
+    )
+    p.add_argument(
+        "--cwd",
+        type=Path,
+        default=Path.cwd(),
+        help="Working directory for tools and context (default: current directory)",
+    )
+    p.add_argument(
+        "--max-iterations",
+        type=int,
+        default=DEFAULT_MAX_ITERATIONS,
+        metavar="N",
+        help=f"Max model turns per user message (default: {DEFAULT_MAX_ITERATIONS})",
+    )
+    p.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Log model turns and tool calls to stderr",
+    )
+    args = p.parse_args()
+
+    if not args.prompt and not args.interactive:
+        p.error("provide -p/--prompt or use -i/--interactive")
+
+    if args.max_iterations < 1:
+        p.error("--max-iterations must be at least 1")
+
+    if not API_KEY:
+        raise RuntimeError("OPENROUTER_API_KEY is not set")
+
+    cwd = args.cwd.expanduser().resolve()
+    if not cwd.is_dir():
+        raise RuntimeError(f"--cwd is not a directory: {cwd}")
+
+    os.chdir(cwd)
+
+    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+    messages = initial_messages(cwd, args.max_iterations)
+
+    if args.prompt:
+        messages.append({"role": "user", "content": args.prompt})
+        content, limited = run_agent_loop(
+            client, messages, max_iterations=args.max_iterations, verbose=args.verbose
+        )
+        if content:
+            print(content)
+        if limited:
+            sys.exit(1)
+        if not args.interactive:
+            return
+
+    if args.interactive:
+        run_interactive(
+            client,
+            messages,
+            max_iterations=args.max_iterations,
+            verbose=args.verbose,
+        )
 
 
 if __name__ == "__main__":
