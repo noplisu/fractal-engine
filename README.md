@@ -69,7 +69,17 @@ The entry point is `app/main.py`.
 ## Project layout
 
 ```
-app/main.py   # CLI, agent loop, and tool implementations
-run.sh        # Local launcher
+app/
+  main.py          # CLI entry point
+  config.py        # Environment and defaults
+  prompts.py       # System prompt
+  agent.py         # Agent loop and interactive REPL
+  tools/           # One module per tool (see tools/__init__.py)
+run.sh
 pyproject.toml
 ```
+
+### Adding a tool
+
+1. Create `app/tools/my_tool.py` with a module-level `tool = Tool(...)`.
+2. Register it in `app/tools/__init__.py` (`ALL_TOOLS` tuple).
