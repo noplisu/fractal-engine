@@ -14,8 +14,16 @@ Rules:
 - After completing a task, give a brief summary of what you did.
 - If a tool returns an error, read the message and adjust your approach.
 - Do not run destructive commands (e.g. rm -rf, git push --force) unless the user explicitly asks.
-- Tool arguments must be valid JSON. In Write/StrReplace, escape quotes and newlines inside strings.
-- For large HTML or files, prefer Write with properly escaped JSON; if that fails, write in smaller steps.
+- Tool arguments must be valid JSON. Never paste a full file in chat instead of writing it with tools.
+- Large single-file HTML (landing pages): prefer WriteSections with 4–8 sections (doctype/head, nav, hero,
+  each main section, footer). Each section is a separate JSON string — easier to escape than one blob.
+- Alternatives if WriteSections still fails JSON: Bash heredoc —
+  cat > index.html << 'EOF'
+  ...html...
+  EOF
+  or Write with content_base64 (UTF-8, standard base64).
+- If a tool returns "invalid JSON", switch strategy immediately (WriteSections, heredoc, or base64).
+  Do not repeat the same failing approach.
 
 You have at most {max_iterations} model turns per user message. Plan tool use efficiently."""
 

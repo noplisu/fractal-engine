@@ -49,7 +49,7 @@ Options:
 | `-i`, `--interactive` | Start interactive mode after any `-p` prompt |
 | `--cwd PATH` | Working directory for tools and system context |
 | `--max-iterations N` | Max model turns per user message (default: 25) |
-| `--max-tokens N` | Max tokens per model response (default: 2048) |
+| `--max-tokens N` | Max tokens per model response (default: 8192) |
 | `-v`, `--verbose` | Log turns and tool calls to stderr |
 | `FRACTAL_MODEL` | OpenRouter model id (default: `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`) |
 | `FRACTAL_MAX_TOKENS` | Default for `--max-tokens` |
@@ -66,8 +66,9 @@ The entry point is `app/main.py`.
 | Glob    | Find files by glob pattern                       |
 | ListDir | List entries in a directory                      |
 | Read       | Read a file by path                              |
-| Write      | Write content to a file                          |
-| StrReplace | Replace an exact string in a file                |
+| Write          | Write content to a file (or content_base64)      |
+| WriteSections  | Write a file from an array of string sections    |
+| StrReplace     | Replace an exact string in a file                |
 | Bash       | Run a shell command                              |
 
 ## Project layout

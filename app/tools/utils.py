@@ -24,8 +24,8 @@ def parse_arguments(arguments: str | dict[str, Any] | None) -> tuple[dict[str, A
         return None, (
             f"Error: invalid JSON in tool arguments ({e.msg} at char {e.pos}). "
             "String values must escape quotes (\\\"), backslashes (\\\\), "
-            "and newlines (\\n). For large files, use Write with a smaller "
-            "payload or split into multiple writes."
+            "and newlines (\\n). For large files use WriteSections (array of chunks), "
+            "Bash heredoc (cat > file << 'EOF'), or Write with content_base64."
         )
     if not isinstance(parsed, dict):
         return None, "Error: tool arguments must be a JSON object"

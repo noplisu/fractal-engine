@@ -13,6 +13,7 @@ from app.tools import (
     read,
     str_replace,
     write,
+    write_sections,
 )
 from app.tools.base import Tool
 from app.tools.utils import parse_arguments
@@ -20,6 +21,7 @@ from app.tools.utils import parse_arguments
 ALL_TOOLS: tuple[Tool, ...] = (
     read.tool,
     write.tool,
+    write_sections.tool,
     str_replace.tool,
     bash.tool,
     grep.tool,

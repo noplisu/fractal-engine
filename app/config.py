@@ -2,7 +2,7 @@ import os
 
 MAX_TOOL_OUTPUT = 50_000
 DEFAULT_MAX_ITERATIONS = 25
-DEFAULT_MAX_TOKENS = 2048
+DEFAULT_MAX_TOKENS = 8192
 SKIP_DIR_NAMES = frozenset(
     {".git", ".venv", "node_modules", "__pycache__", ".ruff_cache"}
 )
