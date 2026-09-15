@@ -6,7 +6,9 @@ A minimal CLI coding assistant powered by an LLM with tool calling. It searches 
 
 - [uv](https://docs.astral.sh/uv/)
 - Python 3.14
-- An [OpenRouter](https://openrouter.ai/) API key
+- An [OpenRouter](https://openrouter.ai/) API key (chat / tool loop)
+- An [OpenAI](https://platform.openai.com/) API key for RAG embeddings (`text-embedding-3-small`)
+- The [micro-rag](https://github.com/noplisu/micro-rag) package (`from micro_rag.api import …`), pulled from GitHub by `uv sync`
 
 ## Setup
 
@@ -14,6 +16,10 @@ A minimal CLI coding assistant powered by an LLM with tool calling. It searches 
 export OPENROUTER_API_KEY="your-key-here"
 # optional:
 # export OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
+# RAG tools (Index / Retrieve) also need:
+export OPENAI_API_KEY="your-openai-key"
+# optional: override index location (default: $CWD/.fractal/rag)
+# export FRACTAL_RAG_DIR="/path/to/rag-store"
 ```
 
 Install dependencies:
@@ -51,8 +57,10 @@ Options:
 | `--max-iterations N` | Max model turns per user message (default: 25) |
 | `--max-tokens N` | Max tokens per model response (default: 8192) |
 | `-v`, `--verbose` | Log turns and tool calls to stderr |
-| `FRACTAL_MODEL` | OpenRouter model id (default: `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free`) |
+| `FRACTAL_MODEL` | OpenRouter model id (default: `anthropic/claude-haiku-4.5`) |
 | `FRACTAL_MAX_TOKENS` | Default for `--max-tokens` |
+| `FRACTAL_RAG_DIR` | Directory for `embeddings.npy` + `chunks.jsonl` (default: `{cwd}/.fractal/rag`) |
+| `OPENAI_API_KEY` | Embeddings for Index / Retrieve (not used for chat) |
 
 If OpenRouter returns **402 (insufficient credits)**, lower `--max-tokens` (e.g. `2048`) or add credits to your key.
 
@@ -70,6 +78,11 @@ The entry point is `app/main.py`.
 | WriteSections  | Write a file from an array of string sections    |
 | StrReplace     | Replace an exact string in a file                |
 | Bash       | Run a shell command                              |
+| Index          | Chunk and embed .txt/.md files into this workspace's RAG store |
+| Retrieve       | Semantic search over that store (excerpts only, no answer) |
+| CheckGrounding | Validate `[source, locator]` citations against retrieved chunks |
+
+The RAG index is **this working directory's memory**, not micro-rag's `data/` corpus. Default files: `{cwd}/.fractal/rag/embeddings.npy` and `chunks.jsonl`. Point `Index` at source documents (for example micro-rag's `data/books`); the resulting matrix stays under `.fractal/rag/`. Chat stays on OpenRouter; embeddings use OpenAI.
 
 ## Project layout
 
@@ -80,6 +93,7 @@ app/
   prompts.py       # System prompt
   agent.py         # Agent loop and interactive REPL
   tools/           # One module per tool (see tools/__init__.py)
+  rag_store.py     # Lazy import of micro_rag.api
 run.sh
 pyproject.toml
 ```

@@ -10,6 +10,9 @@ Rules:
 - Use tools to inspect the codebase before making changes when you are unsure.
 - Prefer StrReplace for small edits; use Write for new files or large rewrites.
 - Prefer Grep, Glob, and ListDir over Bash for search and directory listing.
+- For questions about a document corpus: Index those files if there is no index (or the user points at new documents), Retrieve before claiming facts, cite as [Book Title, Chapter] or [source, locator] using labels from the excerpts, then CheckGrounding on the draft before the final answer.
+- If retrieved excerpts are thin, Retrieve again with a tighter query or say the corpus is insufficient. Do not invent citations.
+- Prefer Retrieve for meaning and paraphrase; use Grep or Read to verify a quote in the source file.
 - Keep changes minimal and focused on the user's request.
 - After completing a task, give a brief summary of what you did.
 - If a tool returns an error, read the message and adjust your approach.

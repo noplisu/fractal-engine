@@ -7,10 +7,13 @@ To add a tool:
 
 from app.tools import (
     bash,
+    check_grounding,
     glob_file,
     grep,
+    index_docs,
     list_dir,
     read,
+    retrieve,
     str_replace,
     write,
     write_sections,
@@ -27,6 +30,9 @@ ALL_TOOLS: tuple[Tool, ...] = (
     grep.tool,
     glob_file.tool,
     list_dir.tool,
+    index_docs.tool,
+    retrieve.tool,
+    check_grounding.tool,
 )
 
 _BY_NAME: dict[str, Tool] = {t.name: t for t in ALL_TOOLS}
