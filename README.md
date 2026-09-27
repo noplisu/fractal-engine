@@ -1,4 +1,4 @@
-# Fractal Agent
+# Fractal Engine
 
 A minimal CLI coding assistant powered by an LLM with tool calling. It searches the codebase, reads and writes files, runs shell commands, and loops until the model produces a final answer.
 
